@@ -1,3 +1,12 @@
 #!/bin/bash
-#g++ -o bin/barricelli src/barricelli.cpp
+
+if [ ! -d "src" ]; then
+  echo "No src directory found. Aborting."
+  exit 0
+fi
+
+if [ ! -d "bin" ]; then
+  mkdir bin
+fi
+
 g++ -std=c++20 -o bin/barricelli src/barricelli.cpp

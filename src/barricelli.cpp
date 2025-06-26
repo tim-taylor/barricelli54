@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 void init(int rule)
 {
     if (rule < 1 || rule > 22) {
-        std::cerr << std::format("Error! Rule set to {} but should be in range 1 to 22.", rule) << std::endl;
+        std::cerr << std::format("Error: Rule set to {} but should be in range 1 to 22.", rule) << std::endl;
         exit(1);
     }
 
@@ -82,7 +82,7 @@ void init(int rule)
             break;
         }
         default: {
-            std::cerr << std::format("Unexpected rule encountered ({})!", rule) << std::endl;
+            std::cerr << std::format("Error: Unexpected rule encountered ({})!", rule) << std::endl;
             exit(1);
         }
 
@@ -93,6 +93,11 @@ void init(int rule)
 
 void initWorld(std::initializer_list<int> initlist)
 {
+    if (initlist.size() > worldSize) {
+        std::cerr << std::format("Error: Initializer list size ({}) is bigger than world size ({})!", initlist.size(), worldSize) << std::endl;
+        exit(1);
+    }
+
     world.clear();
     world.resize(worldSize);
     int pos = 0;
