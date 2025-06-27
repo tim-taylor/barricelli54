@@ -1,3 +1,6 @@
 {
-    "C_Cpp.default.cppStandard": "c++20"
+    "C_Cpp.default.cppStandard": "c++20",
+    "files.associations": {
+        "initializer_list": "cpp"
+    }
 }

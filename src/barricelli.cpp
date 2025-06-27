@@ -5,8 +5,8 @@
 #include <iostream>
 #include <vector>
 #include <format> // from C++20
-//#include <cstdarg>
 #include <cassert>
+#include <string>
 
 enum class Norm {
     BASIC,
@@ -19,20 +19,24 @@ int numGens = 10;
 Norm norm = Norm::BASIC;
 
 std::vector<int> world;
+std::vector<int> nextWorld;
 
+void printUsage(const std::string& progname);
+int parseRuleNumber(int argc, char** argv);
 void init(int rule);
 void initWorld(std::initializer_list<int> initlist);
 void printWorld();
 void updateWorld();
+void flipWorlds();
 void updateBasic();
 void updateConditional();
 void updateExclusion();
 
 /********************************************************** */
 
-int main(int argc, char** argv) {
-
-    int rule = 2; // TODO get this from command line
+int main(int argc, char** argv)
+{
+    int rule = parseRuleNumber(argc, argv);
 
     init(rule);
 
@@ -52,19 +56,50 @@ int main(int argc, char** argv) {
 }
 
 
-void init(int rule)
+int parseRuleNumber(int argc, char** argv)
 {
-    if (rule < 1 || rule > 22) {
-        std::cerr << std::format("Error: Rule set to {} but should be in range 1 to 22.", rule) << std::endl;
+    std::string progname{ argv[0] };
+    std::size_t pos = progname.find_last_of("//");
+    if (pos != std::string::npos && pos < progname.size() - 1) {
+        progname = progname.substr(pos+1);
+    }
+
+    if (argc != 2) {
+        printUsage(progname);
         exit(1);
     }
 
+    int rule;
+    try {
+        rule = std::stoi(argv[1]);
+        if (rule < 1 || rule > 22) {
+            printUsage(progname);
+            exit(1);
+        }
+    }
+    catch (...) {
+        printUsage(progname);
+        exit(1);
+    }
+
+    return rule;
+}
+
+
+void printUsage(const std::string& progname) {
+    std::cerr << std::format("Usage: {} n", progname) << std::endl;
+    std::cerr << "  where n is rule number between 1 and 22" << std::endl;
+}
+
+
+void init(int rule)
+{
     switch (rule) {
         case 1: {
-            worldSize = 10;
-            numGens = 5;
+            worldSize = 22;
+            numGens = 10;
             norm = Norm::BASIC;
-            //initWorld(); //TODO
+            initWorld({4,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,-3}); //TODO
             break;
         }
         case 2: {
@@ -100,6 +135,9 @@ void initWorld(std::initializer_list<int> initlist)
 
     world.clear();
     world.resize(worldSize);
+    nextWorld.clear();
+    nextWorld.resize(worldSize);
+
     int pos = 0;
     for (int num : initlist) {
         world[pos++] = num;
@@ -136,12 +174,27 @@ void updateWorld()
             exit(1);
         }
     }
+
+    flipWorlds();
+}
+
+
+void flipWorlds()
+{
+    world = std::move(nextWorld);
+    nextWorld.assign(worldSize, 0);
 }
 
 
 void updateBasic()
 {
-
+    for (int i=0; i<worldSize; ++i) {
+        nextWorld[i] = world[i];
+        int c=i+world[i];
+        if (c>=0 && c<worldSize) {
+            nextWorld[c]=world[i];
+        }
+    }
 }
 
 void updateConditional()
