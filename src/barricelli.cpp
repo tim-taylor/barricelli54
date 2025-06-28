@@ -32,6 +32,7 @@ void flipWorlds();
 void updateBasic();
 void updateConditional();
 void updateExclusion();
+void checkForReproduction(int i, int j, int level);
 
 /********************************************************** */
 
@@ -138,7 +139,7 @@ void init(int rule)
             break;
         }
         case 5: {
-            worldSize = 10;
+            worldSize = 11;
             numGens = 5;
             norm = Norm::EXCLUSION;
             initWorld({4,0,0,0,0,3,0,0,0,-2});
@@ -232,6 +233,7 @@ void updateBasic()
     }
 }
 
+
 void updateConditional()
 {
     // TODO
@@ -244,16 +246,24 @@ void updateExclusion()
         // reproduce state elsewhere on next line
         if (world[i] != 0) {
             int c = i + world[i];
-            if (c >= 0 && c < worldSize) {
-                nextWorld[c] = world[i];
-                if (world[c] != 0 && world[c] != world[i]) {
-                    int m = world[c];
-                    int y = i+m;
-                    if (y >= 0 && y < worldSize) {
-                        nextWorld[y] = world[i];
-                    }
-                }
-            }
+            checkForReproduction(i,c,1);
+        }
+    }
+}
+
+
+void checkForReproduction(int i, int j, int level)
+{
+    if (level > 100) {
+        return;
+    }
+
+    if (j >= 0 && j < worldSize) {
+        nextWorld[j] = world[i];
+        if (world[j] != 0 && world[j] != world[i]) {
+            int d = world[j];
+            int k = i + d;
+            checkForReproduction(i,k,++level);
         }
     }
 }
