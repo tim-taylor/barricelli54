@@ -162,11 +162,11 @@ void initWorld(std::initializer_list<int> initlist)
         exit(1);
     }
 
-    world.clear();
+    // set world vectors to correct size and initialise elements to 0
     world.resize(worldSize);
-    nextWorld.clear();
     nextWorld.resize(worldSize);
 
+    // set initial world stated according to initlist
     int pos = 0;
     for (int num : initlist) {
         world[pos++] = num;
