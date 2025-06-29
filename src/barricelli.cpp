@@ -22,9 +22,9 @@ std::vector<int> world;
 std::vector<int> nextWorld;
 
 void printUsageAndExit(const std::string& progname, int rc);
-int  parseRuleNumberOrExit(int argc, char** argv);
+int  parseFigNumberOrExit(int argc, char** argv);
 std::string getNormName();
-void init(int rule);
+void init(int fig);
 void initWorld(std::initializer_list<int> initlist);
 void printWorld();
 void updateWorld();
@@ -32,18 +32,18 @@ void flipWorlds();
 void updateBasic();
 void updateConditional();
 void updateExclusion();
-void checkForReproduction(int i, int j, int level);
+void reproduceExclusion(int i, int j, int level);
 
 /********************************************************** */
 
 int main(int argc, char** argv)
 {
-    int rule = parseRuleNumberOrExit(argc, argv);
+    int fig = parseFigNumberOrExit(argc, argv);
 
-    init(rule);
+    init(fig);
 
-    std::cout << std::format("> Running rule {} ({} norm) for {} generations with universe size {}",
-        rule, getNormName(), numGens, worldSize)
+    std::cout << std::format("> Figure {}: {} norm, {} generations with universe size {}",
+        fig, getNormName(), numGens, worldSize)
         << std::endl << std::endl;
 
     printWorld();
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 }
 
 
-int parseRuleNumberOrExit(int argc, char** argv)
+int parseFigNumberOrExit(int argc, char** argv)
 {
     std::string progname{ argv[0] };
     std::size_t pos = progname.find_last_of("//");
@@ -70,10 +70,10 @@ int parseRuleNumberOrExit(int argc, char** argv)
         printUsageAndExit(progname, 1);
     }
 
-    int rule;
+    int fig;
     try {
-        rule = std::stoi(argv[1]);
-        if (rule < 1 || rule > 22) {
+        fig = std::stoi(argv[1]);
+        if (fig < 1 || fig > 22) {
             printUsageAndExit(progname, 1);
         }
     }
@@ -81,13 +81,13 @@ int parseRuleNumberOrExit(int argc, char** argv)
         printUsageAndExit(progname, 1);
     }
 
-    return rule;
+    return fig;
 }
 
 
 void printUsageAndExit(const std::string& progname, int rc) {
     std::cerr << std::format("Usage: {} n", progname) << std::endl;
-    std::cerr << "  where n is rule number between 1 and 22" << std::endl;
+    std::cerr << "  where n is a figure number between 1 and 22" << std::endl;
     exit(rc);
 }
 
@@ -107,9 +107,9 @@ std::string getNormName()
 }
 
 
-void init(int rule)
+void init(int fig)
 {
-    switch (rule) {
+    switch (fig) {
         case 1: {
             worldSize = 62;
             numGens = 10;
@@ -146,7 +146,7 @@ void init(int rule)
             break;
         }
         default: {
-            std::cerr << std::format("Error: Unexpected rule encountered ({})!", rule) << std::endl;
+            std::cerr << std::format("Error: Unexpected figure number encountered ({})!", fig) << std::endl;
             exit(1);
         }
 
@@ -245,25 +245,32 @@ void updateExclusion()
     for (int i=0; i<worldSize; ++i) {
         // reproduce state elsewhere on next line
         if (world[i] != 0) {
-            int c = i + world[i];
-            checkForReproduction(i,c,1);
+            reproduceExclusion(i, i+world[i], 1);
         }
     }
 }
 
-
-void checkForReproduction(int i, int j, int level)
+// Recursive helper function for updateExlusion() to implement
+// the Exclusion norm reproduction process.
+//
+// This function reproduces number at location i in current world into
+// location j in the updated world. It then checks whether location j
+// is occupied in the current world - if it is, and its content
+// is not the same as at location i, then it calls this function
+// recursively to reproduce the number at location i into the
+// the location given by i offset by the content of location j.
+//
+void reproduceExclusion(int i, int j, int level)
 {
-    if (level > 100) {
+    // first do a belt and braces check to guard against infinite recursion
+    if (level > worldSize) {
         return;
     }
 
-    if (j >= 0 && j < worldSize) {
+    if ((j >= 0) && (j < worldSize)) {
         nextWorld[j] = world[i];
-        if (world[j] != 0 && world[j] != world[i]) {
-            int d = world[j];
-            int k = i + d;
-            checkForReproduction(i,k,++level);
+        if ((world[j] != 0) && (world[j] != world[i])) {
+            reproduceExclusion(i, i+world[j], ++level);
         }
     }
 }
