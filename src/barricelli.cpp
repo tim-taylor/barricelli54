@@ -164,13 +164,25 @@ void init(int fig)
             initWorld({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,-3,1,-3,0,-3,1});
             break;
         }
+        case 8: {
+            worldSize = 59;
+            numGens = 17;
+            norm = Norm::EXCLUSION;
+            initWorld({9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,0,0,0,0,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3});
+            break;
+        }
+        case 9: {
+            worldSize = 116;
+            numGens = 19;
+            norm = Norm::EXCLUSION;
+            initWorld({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3,5,-11,1,-3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7,9,-11,1,-7});
+            break;
+        }
         default: {
             std::cerr << std::format("Error: Unexpected figure number encountered ({})!", fig) << std::endl;
             exit(1);
         }
-
     }
-
 }
 
 
@@ -323,7 +335,6 @@ void reproduceExclusion(int i, int j, int level)
         if ((world[j] != 0) && (world[j] != X_MARK) && (world[j] != world[i])) {
             reproduceExclusion(i, i+world[j], ++level);
         }
-
     }
 }
 
