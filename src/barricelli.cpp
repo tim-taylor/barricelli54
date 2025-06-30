@@ -15,6 +15,11 @@ enum class Norm {
     CONDITIONAL
 };
 
+struct FindResult {
+    int pos;
+    int num;
+};
+
 int worldSize = 20;
 int numGens = 10;
 Norm norm = Norm::BASIC;
@@ -37,6 +42,8 @@ void reproduceSymbiotic(int i, int j, int level);
 void updateExclusion();
 void reproduceExclusion(int i, int j, int level);
 void updateConditional();
+void reproduceConditional(int i, int j, int level);
+FindResult findNearestNumber(int i, int d);
 
 /********************************************************** */
 
@@ -190,6 +197,27 @@ void init(int fig)
             numGens = 11;
             norm = Norm::EXCLUSION;
             initWorld({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,-11,1,-7,5,-11,1,-7,5,-11,1,-7,5,-11,1,-7,5,-11,1,-7,5,-11,1,-7,0,0,0,0,0,0,0,0,9,-11,1,-3,9,-11,1,-3,9,-11,1,-3,9,-11,1,-3,9,-11,1,-3,9,-11,1,-3,9,-11,1,-3});
+            break;
+        }
+        case 12: {
+            worldSize = 12;
+            numGens = 7;
+            norm = Norm::CONDITIONAL;
+            initWorld({3,0,0,0,0,2,0,-4});
+            break;
+        }
+        case 13: {
+            worldSize = 6;
+            numGens = 2;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,-2,0,0,-5});
+            break;
+        }
+        case 14: {
+            worldSize = 8;
+            numGens = 2;
+            norm = Norm::CONDITIONAL;
+            initWorld({3,0,0,2,0,0,0,-4});
             break;
         }
         default: {
@@ -356,6 +384,59 @@ void reproduceExclusion(int i, int j, int level)
 
 void updateConditional()
 {
-    // TODO
-    assert(false);
+    for (int i=0; i<worldSize; ++i) {
+        // reproduce state elsewhere on next line
+        if ((world[i] != 0) && (world[i] != X_MARK)) {
+            reproduceConditional(i, i+world[i], 1);
+        }
+    }
+}
+
+
+void reproduceConditional(int i, int j, int level)
+{
+    // first do a belt and braces check to guard against infinite recursion
+    if (level > worldSize) {
+        return;
+    }
+
+    if ((j >= 0) && (j < worldSize)) {
+        if (nextWorld[j] == 0) {
+            nextWorld[j] = world[i];
+        }
+        else if (nextWorld[j] == world[i]) {
+            // do nothing
+        }
+        else {
+            if (world[j] != 0 && world[j] != X_MARK) {
+                nextWorld[j] = X_MARK;
+            }
+            else {
+                auto [lpos, lnum] = findNearestNumber(j, -1);
+                auto [rpos, rnum] = findNearestNumber(j, 1);
+                if (lpos == X_MARK || rpos == X_MARK) {
+                    nextWorld[j] = X_MARK;
+                }
+                else {
+                    nextWorld[j] = (rpos-lpos) * ((lnum * rnum) > 0 ? 1 : -1);
+                }
+            }
+        }
+        if ((world[j] != 0) && (world[j] != X_MARK) && (world[j] != world[i])) {
+            reproduceConditional(i, i+world[j], ++level);
+        }
+    }
+}
+
+
+FindResult findNearestNumber(int i, int d) {
+    int pos = i+d;
+    while (pos >=0 && pos < worldSize) {
+        if (world[pos] != 0 && world[pos] != X_MARK) {
+            return {pos, world[pos]};
+        }
+        pos += d;
+    }
+
+    return {X_MARK, X_MARK};
 }
