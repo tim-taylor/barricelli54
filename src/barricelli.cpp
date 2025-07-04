@@ -1,5 +1,24 @@
-// Barricelli's Universes
+// Barricelli54
 //
+// An implementation of the artificial worlds described by Nils Aall Barricelli
+// in his first journal publication about his numerical symbioorganisms,
+// published in 1954:
+//
+// Nils Aall Barricelli. "Esempi Numerici Di Processi Di Evoluzione",
+//  Methodos (6) 45-68, 1954.
+//
+// The program takes a number in the range 1-22 as a command line argument,
+// and reproduces the corresponding figure from Barricelli's 1954 paper.
+//
+// TODO add publication details of translation for more info
+//
+// Written by: Tim Taylor <https://www.tim-taylor.com>
+// First release: July 2025
+// Last update: July 2025
+//
+// TODO state licence terms
+//
+// TODO update compilation instructions
 // compile with g++ -std=c++20 -o barricelli barricelli.cpp
 
 #include <iostream>
@@ -43,7 +62,7 @@ void updateExclusion();
 void reproduceExclusion(int i, int j, int level);
 void updateConditional();
 void reproduceConditional(int i, int j, int level);
-FindResult findNearestNumber(int i, int d);
+FindResult findNearestNumber(int i, int delta);
 
 /********************************************************** */
 
@@ -71,6 +90,8 @@ int main(int argc, char** argv)
 
 int parseFigNumberOrExit(int argc, char** argv)
 {
+    // TODO add option of -c flag to produce a csv output
+
     std::string progname{ argv[0] };
     std::size_t pos = progname.find_last_of("//");
     if (pos != std::string::npos && pos < progname.size() - 1) {
@@ -222,7 +243,7 @@ void init(int fig)
         }
         case 15: {
             worldSize = 83;
-            numGens = 9; //96;
+            numGens = 96;
             norm = Norm::CONDITIONAL;
             initWorld({0,1,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,-1,0,0,0,-1,1,1,-1,1,1,1,1,1,0,0,1,-1,1,0,0,-1,-1,0,1,1,-1,0,1,1,1,1,0,-1,-1,-1,0,0,0,-1,0,0,1,-1,0,-1,1,0,-1,0,0,-1,1,0,0,-1,1,-1,1,-1,-1,1,1,0,-1,1,1});
             break;
@@ -348,12 +369,13 @@ void flipWorlds()
 }
 
 
+// Basic update procedure, as described in Section 2 of (Barricelli, 1954)
 void updateBasic()
 {
     for (int i=0; i<worldSize; ++i) {
         // copy state to same position on next line
-        int x = (nextWorld[i]!=0) ? world[i] : 0;           // collision rule for basic reproduction
-        nextWorld[i]+=(world[i]-x);
+        int x = (nextWorld[i] != 0) ? world[i] : 0;         // collision rule for basic reproduction
+        nextWorld[i] += (world[i]-x);
 
         // reproduce state elsewhere on next line
         if (world[i] != 0) {
@@ -367,10 +389,11 @@ void updateBasic()
 }
 
 
+// Symbiotic update procedure, as described in Section 4 of (Barricelli, 1954)
 void updateSymbiotic()
 {
     for (int i=0; i<worldSize; ++i) {
-        // reproduce state elsewhere on next line
+        // if this cell contains a number (not blank(0)), attempt to reproduce it
         if (world[i] != 0) {
             reproduceSymbiotic(i, i+world[i], 1);
         }
@@ -395,7 +418,10 @@ void reproduceSymbiotic(int i, int j, int level)
     }
 
     if ((j >= 0) && (j < worldSize)) {
+        // reproduce number in cell i into cell j of next generation
         nextWorld[j] = world[i];
+        // if the new contents of cell j comes below a different (non-zero) number,
+        // then reproduce it in cell (i + [contents of j])
         if ((world[j] != 0) && (world[j] != world[i])) {
             reproduceSymbiotic(i, i+world[j], ++level);
         }
@@ -403,10 +429,11 @@ void reproduceSymbiotic(int i, int j, int level)
 }
 
 
+// Exclusion update procedure, as described in Section 4 of (Barricelli, 1954)
 void updateExclusion()
 {
     for (int i=0; i<worldSize; ++i) {
-        // reproduce state elsewhere on next line
+        // if this cell contains a number (not blank(0) or X), attempt to reproduce it
         if ((world[i] != 0) && (world[i] != X_MARK)) {
             reproduceExclusion(i, i+world[i], 1);
         }
@@ -438,11 +465,12 @@ void reproduceExclusion(int i, int j, int level)
 }
 
 
+// Conditional update procedure, as described in Section 5 of (Barricelli, 1954)
 void updateConditional()
 {
     for (int i=0; i<worldSize; ++i) {
-        // reproduce state elsewhere on next line
         if ((world[i] != 0) && (world[i] != X_MARK)) {
+            // if this cell contains a number (not blank(0) or X), attempt to reproduce it
             reproduceConditional(i, i+world[i], 1);
         }
     }
@@ -458,6 +486,7 @@ void reproduceConditional(int i, int j, int level)
 
     if ((j >= 0) && (j < worldSize)) {
         if (nextWorld[j] == 0) {
+            // if no other orgs have reproduced into cell j yet, go ahead and reproduce cell i here
             nextWorld[j] = world[i];
         }
         else if (nextWorld[j] == world[i]) {
@@ -485,13 +514,13 @@ void reproduceConditional(int i, int j, int level)
 }
 
 
-FindResult findNearestNumber(int i, int d) {
-    int pos = i+d;
-    while (pos >=0 && pos < worldSize) {
-        if (world[pos] != 0 && world[pos] != X_MARK) {
+FindResult findNearestNumber(int i, int delta) {
+    int pos = i + delta;
+    while ((pos >= 0) && (pos < worldSize)) {
+        if ((world[pos] != 0) && (world[pos] != X_MARK)) {
             return {pos, world[pos]};
         }
-        pos += d;
+        pos += delta;
     }
 
     return {X_MARK, X_MARK};
