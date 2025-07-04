@@ -220,6 +220,62 @@ void init(int fig)
             initWorld({3,0,0,2,0,0,0,-4});
             break;
         }
+        case 15: {
+            worldSize = 83;
+            numGens = 9; //96;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,1,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,-1,0,0,0,-1,1,1,-1,1,1,1,1,1,0,0,1,-1,1,0,0,-1,-1,0,1,1,-1,0,1,1,1,1,0,-1,-1,-1,0,0,0,-1,0,0,1,-1,0,-1,1,0,-1,0,0,-1,1,0,0,-1,1,-1,1,-1,-1,1,1,0,-1,1,1});
+            break;
+        }
+        case 16: {
+            worldSize = 12;
+            numGens = 6;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,0,0,0,1,-1});
+            break;
+        }
+        case 17: {
+            worldSize = 20;
+            numGens = 39;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,0,0,0,1,-2,1,1,-2,0,1,-2,1,1,-2});
+            break;
+        }
+        case 18: {
+            worldSize = 21;
+            numGens = 20;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,0,0,0,0,1,-1,0,0,1,1,-2,0,1,-2});
+            break;
+        }
+        case 19: {
+            worldSize = 21;
+            numGens = 3;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,0,0,0,0,0,0,4,0,0,0,-4});
+            break;
+        }
+        case 20: {
+            worldSize = 18;
+            numGens = 4;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,0,0,0,0,0,0,0,1,-3,1,-3,1,-3});
+            break;
+        }
+        case 21: {
+            worldSize = 19;
+            numGens = 4;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,0,0,0,0,3,0,0,-3});
+            break;
+        }
+        case 22: {
+            worldSize = 20;
+            numGens = 5;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,0,0,0,0,0,0,0,2,2,-2,-2});
+            break;
+        }
         default: {
             std::cerr << std::format("Error: Unexpected figure number encountered ({})!", fig) << std::endl;
             exit(1);
@@ -250,7 +306,7 @@ void initWorld(std::initializer_list<int> initlist)
 void printWorld()
 {
     for (int num : world) {
-        std::cout << ((num==0) ? "   " : (num==X_MARK) ? "  X" : std::format("{:3}", num));
+        std::cout << ((num==0) ? "   " : (num==X_MARK) ? "  x" : std::format("{:3}", num));
     }
     std::cout << std::endl;
 }
