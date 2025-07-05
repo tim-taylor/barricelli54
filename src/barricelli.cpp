@@ -25,6 +25,7 @@
 #include <vector>
 #include <format> // from C++20
 #include <string>
+#include <cstring>
 #include <cassert>
 
 enum class Norm {
@@ -39,13 +40,17 @@ struct FindResult {
     int num;
 };
 
-int worldSize = 20;
+const int NUM_RULES = 24;
+const int X_MARK = 99999;
+
+int worldSize = 10;
 int numGens = 10;
 Norm norm = Norm::BASIC;
-
-const int X_MARK = 99999;
 std::vector<int> world;
 std::vector<int> nextWorld;
+
+bool printCSV = false;
+bool debug = false;
 
 void printUsageAndExit(const std::string& progname, int rc);
 int  parseFigNumberOrExit(int argc, char** argv);
@@ -72,9 +77,11 @@ int main(int argc, char** argv)
 
     init(fig);
 
-    std::cout << std::format("Figure {}: {} reproduction for {} generations with universe size {}",
-        fig, getNormName(), numGens, worldSize)
-        << std::endl << std::endl;
+    if (!printCSV) {
+        std::cout << std::format("Figure {}: {} reproduction for {} generations with universe size {}",
+            fig, getNormName(), numGens, worldSize)
+            << std::endl << std::endl;
+    }
 
     printWorld();
     for (int i=1; i<numGens; ++i) {
@@ -82,7 +89,9 @@ int main(int argc, char** argv)
         printWorld();
     }
 
-    std::cout << std::endl;
+    if (!printCSV) {
+        std::cout << std::endl;
+    }
 
     return 0;
 }
@@ -90,22 +99,32 @@ int main(int argc, char** argv)
 
 int parseFigNumberOrExit(int argc, char** argv)
 {
-    // TODO add option of -c flag to produce a csv output
-
     std::string progname{ argv[0] };
     std::size_t pos = progname.find_last_of("//");
     if (pos != std::string::npos && pos < progname.size() - 1) {
         progname = progname.substr(pos+1);
     }
 
-    if (argc != 2) {
+    if (argc < 2 || argc > 3) {
         printUsageAndExit(progname, 1);
+    }
+
+    int figIdx = 1;
+
+    if (argc == 3) {
+        if (std::strcmp(argv[1], "-c") == 0) {
+            printCSV = true;
+            figIdx = 2;
+        }
+        else {
+            printUsageAndExit(progname, 1);
+        }
     }
 
     int fig;
     try {
-        fig = std::stoi(argv[1]);
-        if (fig < 1 || fig > 22) {
+        fig = std::stoi(argv[figIdx]);
+        if (fig < 1 || fig > NUM_RULES) {
             printUsageAndExit(progname, 1);
         }
     }
@@ -118,8 +137,9 @@ int parseFigNumberOrExit(int argc, char** argv)
 
 
 void printUsageAndExit(const std::string& progname, int rc) {
-    std::cerr << std::format("Usage: {} n", progname) << std::endl;
-    std::cerr << "  where n is a figure number between 1 and 22" << std::endl;
+    std::cerr << std::format("Usage: {} [-c] n", progname) << std::endl;
+    std::cerr << std::format("  where n is a figure number between 1 and {}", NUM_RULES) << std::endl;
+    std::cerr << "        -c specifies CSV output" << std::endl;
     exit(rc);
 }
 
@@ -243,7 +263,7 @@ void init(int fig)
         }
         case 15: {
             worldSize = 83;
-            numGens = 96;
+            numGens = 100;
             norm = Norm::CONDITIONAL;
             initWorld({0,1,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,-1,0,0,0,-1,1,1,-1,1,1,1,1,1,0,0,1,-1,1,0,0,-1,-1,0,1,1,-1,0,1,1,1,1,0,-1,-1,-1,0,0,0,-1,0,0,1,-1,0,-1,1,0,-1,0,0,-1,1,0,0,-1,1,-1,1,-1,-1,1,1,0,-1,1,1});
             break;
@@ -297,6 +317,22 @@ void init(int fig)
             initWorld({0,0,0,0,0,0,0,0,2,2,-2,-2});
             break;
         }
+        case 23: {
+            // Test case: run Figure 15 for the first 9 generations
+            worldSize = 83;
+            numGens = 9;
+            norm = Norm::CONDITIONAL;
+            initWorld({0,1,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,-1,0,0,0,-1,1,1,-1,1,1,1,1,1,0,0,1,-1,1,0,0,-1,-1,0,1,1,-1,0,1,1,1,1,0,-1,-1,-1,0,0,0,-1,0,0,1,-1,0,-1,1,0,-1,0,0,-1,1,0,0,-1,1,-1,1,-1,-1,1,1,0,-1,1,1});
+            break;
+        }
+        case 24: {
+            // Test case: initialise world with row 8 of Figure 15 and run for just one further generation
+            worldSize = 83;
+            numGens = 2;
+            norm = Norm::CONDITIONAL;
+            initWorld({1,-1,1,-1,1,-1,1,0,0,1,0,0,1,4,-1,0,0,0,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,1,-1,1,-1,1,0,0,0,-1,1,-1,1,-1,1,-1,1,-1,1,-1,0,1,-1,1,-1,1,3,0,-4,0,-4,0,0,0,1,1,-1,1,-1,1,-1,1,X_MARK,X_MARK,X_MARK,1,-2,1,1,-2,0,1,0});
+            break;
+        }
         default: {
             std::cerr << std::format("Error: Unexpected figure number encountered ({})!", fig) << std::endl;
             exit(1);
@@ -326,8 +362,23 @@ void initWorld(std::initializer_list<int> initlist)
 
 void printWorld()
 {
-    for (int num : world) {
-        std::cout << ((num==0) ? "   " : (num==X_MARK) ? "  x" : std::format("{:3}", num));
+    if (printCSV) {
+        for (int i = 0; i < worldSize; ++i) {
+            if (world[i] == X_MARK) {
+                std::cout << "x";
+            }
+            else {
+                std::cout << world[i];
+            }
+            if (i < worldSize-1) {
+                std::cout << ",";
+            }
+        }
+    }
+    else {
+        for (int num : world) {
+            std::cout << ((num==0) ? "   " : (num==X_MARK) ? "  x" : std::format("{:3}", num));
+        }
     }
     std::cout << std::endl;
 }
@@ -484,6 +535,10 @@ void reproduceConditional(int i, int j, int level)
         return;
     }
 
+    if (debug) {
+        std::cout << std::format("reproduceConditional: i={:2}, j={:2}, level={:2}",i,j,level) << std::endl;
+    }
+
     if ((j >= 0) && (j < worldSize)) {
         if (nextWorld[j] == 0) {
             // if no other orgs have reproduced into cell j yet, go ahead and reproduce cell i here
@@ -507,7 +562,10 @@ void reproduceConditional(int i, int j, int level)
                 }
             }
         }
-        if ((world[j] != 0) && (world[j] != X_MARK) && (world[j] != world[i])) {
+        if ((world[j] != 0) && (world[j] != X_MARK) && (world[j] != world[i]) && ((i+world[j]) != j)) {
+            if (debug) {
+                std::cout << "recurse" << std::endl;
+            }
             reproduceConditional(i, i+world[j], ++level);
         }
     }
