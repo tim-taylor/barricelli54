@@ -138,7 +138,8 @@ int parseFigNumberOrExit(int argc, char** argv)
 
 void printUsageAndExit(const std::string& progname, int rc) {
     std::cerr << std::format("Usage: {} [-c] n", progname) << std::endl;
-    std::cerr << std::format("  where n is a figure number between 1 and {}", NUM_RULES) << std::endl;
+    std::cerr << std::format("  where n is a figure number between 1 and {} (numbers above 22 are test cases)",
+        NUM_RULES) << std::endl;
     std::cerr << "        -c specifies CSV output" << std::endl;
     exit(rc);
 }
