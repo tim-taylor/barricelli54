@@ -27,6 +27,8 @@
 #include <string>
 #include <cstring>
 #include <cassert>
+#include <random>
+#include <algorithm>
 
 enum class Norm {
     BASIC,
@@ -40,7 +42,7 @@ struct FindResult {
     int num;
 };
 
-const int NUM_RULES = 24;
+const int NUM_RULES = 25;
 const int X_MARK = 99999;
 
 int worldSize = 10;
@@ -56,7 +58,7 @@ void printUsageAndExit(const std::string& progname, int rc);
 int  parseFigNumberOrExit(int argc, char** argv);
 std::string getNormName();
 void init(int fig);
-void initWorld(std::initializer_list<int> initlist);
+void initWorld(std::vector<int> initlist);
 void printWorld();
 void updateWorld();
 void flipWorlds();
@@ -334,6 +336,29 @@ void init(int fig)
             initWorld({1,-1,1,-1,1,-1,1,0,0,1,0,0,1,4,-1,0,0,0,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,1,-1,1,-1,1,0,0,0,-1,1,-1,1,-1,1,-1,1,-1,1,-1,0,1,-1,1,-1,1,3,0,-4,0,-4,0,0,0,1,1,-1,1,-1,1,-1,1,X_MARK,X_MARK,X_MARK,1,-2,1,1,-2,0,1,0});
             break;
         }
+        case 25: {
+            // Test case: like Barricelli's Figure 15, where he started with a randomly assigned
+            // initial state using tosses of two coins => both heads were marked as a 1, both tails
+            // as -1, and mixed head/tail as 0. Here we use the same probability distribution but
+            // generate a new random state each time the test is called.
+
+            worldSize = 83;
+            numGens = 100;
+            norm = Norm::CONDITIONAL;
+
+            std::random_device rnd_device;
+            std::mt19937 rng { rnd_device() };
+            std::uniform_int_distribution<int> dist {-1, 2}; // generate numbers in range [-1,2]
+
+            std::vector<int> state(worldSize);
+            std::generate(state.begin(), state.end(), [&](){
+                int n = dist(rng);
+                return (n==2) ? 0 : n; // returns "-1" 25% of time, "0" 50% and "1" 25%
+            });
+
+            initWorld(state);
+            break;
+        }
         default: {
             std::cerr << std::format("Error: Unexpected figure number encountered ({})!", fig) << std::endl;
             exit(1);
@@ -342,7 +367,7 @@ void init(int fig)
 }
 
 
-void initWorld(std::initializer_list<int> initlist)
+void initWorld(std::vector<int> initlist)
 {
     if (initlist.size() > worldSize) {
         std::cerr << std::format("Error: Initializer list size ({}) is bigger than world size ({})!", initlist.size(), worldSize) << std::endl;
