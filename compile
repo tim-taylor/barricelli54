@@ -5,8 +5,8 @@ if [ ! -d "src" ]; then
   exit 0
 fi
 
-if [ ! -d "bin" ]; then
-  mkdir bin
-fi
+#if [ ! -d "bin" ]; then
+#  mkdir bin
+#fi
 
-g++ -std=c++20 -g -o bin/barricelli src/barricelli.cpp
+g++ -std=c++20 -g -o barricelli54 src/barricelli54.cpp

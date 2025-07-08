@@ -1,4 +1,4 @@
-// Barricelli54
+// barricelli54
 //
 // An implementation of the artificial worlds described by Nils Aall Barricelli
 // in his first journal publication about his numerical symbioorganisms,
