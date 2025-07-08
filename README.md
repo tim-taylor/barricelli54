@@ -1,6 +1,6 @@
 # barricelli54
 A C++ implementation of Nils Aall Barricelli's computational worlds as
-described in his 1954 paper "Esempi Numerici di Processi di Evoluzione".
+described in his 1954 paper _Esempi Numerici di Processi di Evoluzione_.
 The program regenerates each of the figures shown in the paper.
 
 ## Compilation
