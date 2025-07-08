@@ -266,7 +266,7 @@ void init(int fig)
         }
         case 15: {
             worldSize = 83;
-            numGens = 100;
+            numGens = 101;
             norm = Norm::CONDITIONAL;
             initWorld({0,1,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,-1,0,0,0,-1,1,1,-1,1,1,1,1,1,0,0,1,-1,1,0,0,-1,-1,0,1,1,-1,0,1,1,1,1,0,-1,-1,-1,0,0,0,-1,0,0,1,-1,0,-1,1,0,-1,0,0,-1,1,0,0,-1,1,-1,1,-1,-1,1,1,0,-1,1,1});
             break;
@@ -343,7 +343,7 @@ void init(int fig)
             // generate a new random state each time the test is called.
 
             worldSize = 83;
-            numGens = 100;
+            numGens = 101;
             norm = Norm::CONDITIONAL;
 
             std::random_device rnd_device;
