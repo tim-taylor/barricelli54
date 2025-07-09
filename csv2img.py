@@ -5,8 +5,9 @@
 # and generate an PNG image in the style used in Barricelli's 1954 paper.
 #
 # usage:
-# > ./csv2img.py [-b] <input_csv_file>
+# > ./csv2img.py [-b] <input_csv_file> [label_specs...]
 # where the optional -b flag specifies that grid lines are to be drawn
+# and label_specs are of the form: <above|below>:<start_col>:<end_col>:<label_text>
 #
 # Program written by ChatGPT and Tim Taylor
 # July 2025
@@ -17,6 +18,8 @@ import matplotlib.patches as patches
 import numpy as np
 import sys
 import os
+import matplotlib.patheffects as path_effects
+
 
 def read_csv_to_array(file_path):
     """Reads a CSV file of numerical values or 'x' into a 2D list."""
@@ -33,22 +36,38 @@ def read_csv_to_array(file_path):
                     try:
                         processed_row.append(int(item))
                     except ValueError:
-                        processed_row.append(0)  # Default to 0 if parsing fails
+                        processed_row.append(0)
             data.append(processed_row)
     return data
 
-def draw_grid(data, output_path, draw_borders=False):
-    """Draws a compact grid with bold numbers or 'x' from the 2D list and saves it as an image."""
+def draw_bracket(ax, start, end, row_y, above=True, label=""):
+    """Draw a simple horizontal bracket line with caps and a label above or below."""
+    mid = (start + end) / 2
+    label_y = row_y + (-0.4 if above else 0.4)
+    cap_height = 0.15 if above else -0.15
+
+    # Straight horizontal line
+    ax.plot([start, end], [row_y, row_y], color='black', linewidth=0.8)
+
+    # Caps at each end
+    ax.plot([start, start], [row_y, row_y + cap_height], color='black', linewidth=0.8)
+    ax.plot([end, end], [row_y, row_y + cap_height], color='black', linewidth=0.8)
+
+    # Label
+    ax.text(mid, label_y, label, ha='center', va='center', fontsize=6, fontweight='bold')
+
+def draw_grid(data, output_path, draw_borders=False, labels=[]):
     rows = len(data)
     cols = len(data[0]) if rows > 0 else 0
-
-    fig, ax = plt.subplots(figsize=(cols * 0.125, rows * 0.125), dpi=300)
+    fig_height = rows * 0.125 + (0.4 if len(labels) > 0 else 0.0)
+    fig, ax = plt.subplots(figsize=(cols * 0.125, fig_height), dpi=300)
 
     ax.set_xlim(0, cols)
-    ax.set_ylim(0, rows)
+    if len(labels) == 0:
+        ax.set_ylim(0, rows)
+    else:
+        ax.set_ylim(-1.1, rows + 1.1)
     ax.axis('off')
-
-    # Invert y-axis to have the first row at the top
     ax.invert_yaxis()
 
     for y in range(rows):
@@ -60,7 +79,7 @@ def draw_grid(data, output_path, draw_borders=False):
                 ax.add_patch(rect)
 
             if value == 0:
-                continue  # Leave the cell content empty, but border will still be drawn if requested
+                continue
 
             if value == 'x':
                 display_text = 'x'
@@ -78,32 +97,54 @@ def draw_grid(data, output_path, draw_borders=False):
                 ax.text(x + 0.5, y + 0.5, display_text,
                         ha='center', va='center', fontsize=6, fontweight='bold', clip_on=True)
 
+    for label in labels:
+        position, start, end, text = label
+        start, end = int(start), int(end)
+        if position == 'above':
+            draw_bracket(ax, start, end, -0.2, above=True, label=text)
+        elif position == 'below':
+            draw_bracket(ax, start, end, rows + 0.35, above=False, label=text)
+
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
     plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
     plt.close()
 
-
 def print_usage_and_exit():
-    print("Usage: csv2img.py [-b] <input_csv_file>")
+    print("Usage: csv2img.py [-b] <input_csv_file> [label_specs...]")
+    print("label_specs format: above|below:<start_col>:<end_col>:<label_text>")
     sys.exit(1)
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_usage_and_exit()
 
     draw_borders = False
-    if sys.argv[1] == '-b':
+    arg_index = 1
+    if sys.argv[arg_index] == '-b':
         draw_borders = True
-        if len(sys.argv) < 3:
+        arg_index += 1
+
+    if arg_index >= len(sys.argv):
+        print_usage_and_exit()
+
+    input_csv = sys.argv[arg_index]
+    arg_index += 1
+    label_specs = sys.argv[arg_index:]
+
+    labels = []
+    for spec in label_specs:
+        try:
+            position, start, end, text = spec.split(':', 3)
+            if position not in ('above', 'below'):
+                raise ValueError
+            labels.append((position, start, end, text))
+        except ValueError:
+            print(f"Invalid label specification: {spec}")
             print_usage_and_exit()
-        input_csv = sys.argv[2]
-    else:
-        input_csv = sys.argv[1]
 
     output_image = os.path.splitext(os.path.basename(input_csv))[0] + ".png"
 
     data = read_csv_to_array(input_csv)
-    draw_grid(data, output_image, draw_borders)
+    draw_grid(data, output_image, draw_borders, labels)
 
     print(f"Image saved as {output_image}")
