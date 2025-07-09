@@ -4,22 +4,42 @@
 // in his first journal publication about his numerical symbioorganisms,
 // published in 1954:
 //
-// Nils Aall Barricelli. "Esempi Numerici Di Processi Di Evoluzione",
-//  Methodos (6) 45-68, 1954.
+//   Nils Aall Barricelli. "Esempi Numerici Di Processi Di Evoluzione",
+//     Methodos (6) 45-68, 1954.
+//
+// An English translation of the paper appears in the Artificial Life journal:
+//
+//   Nils Aall Barricelli. "Numerical examples of evolutionary processes",
+//     Artificial Life (x) xx-xx, 202x. DOI: xyz
+//
+// This translation is accompanied by a commentary on the paper:
+//
+//   Tim Taylor, Giulia Bianchi et al. "Lorem Ipsum",
+//     Artificial Life (x) xx-xx, 202x. DOI: xyz
+//
+// TODO fill in citation details in previous lines when known
 //
 // The program takes a number in the range 1-22 as a command line argument,
 // and reproduces the corresponding figure from Barricelli's 1954 paper.
 //
-// TODO add publication details of translation for more info
+// Usage:
+//   > barricelli54 [-c] n
+// where:
+//   n  is a number between 1 and 22 to specify which figure from
+//      Barricelli's 1954 paper is to be reproduced
+//   -c Produce output in CSV format. If this flag is not specified, the
+//      output is space separated and padded so that columns line up
+//      vertically
+//
+// Example compilation command with the g++ compiler:
+//   > g++ -std=c++20 -o barricelli54 barricelli54.cpp
 //
 // Written by: Tim Taylor <https://www.tim-taylor.com>
 // First release: July 2025
 // Last update: July 2025
 //
 // TODO state licence terms
-//
-// TODO update compilation instructions
-// compile with g++ -std=c++20 -o barricelli barricelli.cpp
+
 
 #include <iostream>
 #include <vector>
@@ -477,6 +497,7 @@ void updateSymbiotic()
     }
 }
 
+
 // Recursive helper function for updateSymbiotic() to implement
 // the symbiotic reproduction process.
 //
@@ -506,7 +527,7 @@ void reproduceSymbiotic(int i, int j, int level)
 }
 
 
-// Exclusion update procedure, as described in Section 4 of (Barricelli, 1954)
+// Exclusion update procedure ("exclusion norm"), as described in Section 4 of (Barricelli, 1954)
 void updateExclusion()
 {
     for (int i=0; i<worldSize; ++i) {
@@ -518,6 +539,19 @@ void updateExclusion()
 }
 
 
+// Recursive helper function for updateExclusion() to implement
+// the exclusion norm.
+//
+// This function attempts to reproduce the number at location i in current world into
+// location j in the updated world. If location j in the updated world is already
+// occupied, and the contents is different to the number we are trying to reproduce,
+// then an exlusion mark (X_MARK) is placed in location j instead.
+// Regardless of whether the number was copied or an X_MARK was written, the
+// function then checks whether location j is occupied in the current world - if it is,
+// and its content is not the same as at location i, then we call this function
+// recursively to reproduce the number at location i into the
+// the location given by i offset by the content of location j.
+//
 void reproduceExclusion(int i, int j, int level)
 {
     // first do a belt and braces check to guard against infinite recursion
@@ -527,15 +561,24 @@ void reproduceExclusion(int i, int j, int level)
 
     if ((j >= 0) && (j < worldSize)) {
         if (nextWorld[j] == 0) {
+            // the destination cell is blank, so go ahead
             nextWorld[j] = world[i];
         }
         else if (nextWorld[j] == world[i]) {
-            // do nothing
+            // the destination cell contains the same number that we want to move
+            // to it, so do nothing in this case (the current number remains)
         }
         else {
+            // the destination cell is neither blank nor contains the same
+            // number that we want to move to it, so mark it with
+            // an exclusion mark
             nextWorld[j] = X_MARK;
         }
-        if ((world[j] != 0) && (world[j] != X_MARK) && (world[j] != world[i])) {
+        if ((world[j] != 0) && (world[j] != X_MARK) && (world[j] != world[i]) && (i+world[j] != j)) {
+            // if the new contents of cell j comes below a different (non-zero) number,
+            // then reproduce it in cell (i + [contents of j]). The final condition
+            // in the line above (i+world[j] != j) ensures we don't waste our time trying to move
+            // into the same cell j as we have just handeled in the current call to this function.
             reproduceExclusion(i, i+world[j], ++level);
         }
     }
@@ -554,6 +597,24 @@ void updateConditional()
 }
 
 
+// Recursive helper function for updateConditional() to implement
+// the conditional norm.
+//
+// This function attempts to reproduce the number at location i in current world into
+// location j in the updated world. If location j in the updated world is already
+// occupied, and the contents is different to the number we are trying to reproduce,
+// then an exlusion mark (X_MARK) is placed in location j instead.
+// If the exclusion mark falls under an empty cell, or another X_MARK, it is replaced
+// by a number equal to the distance between the nearest number to the left and the
+// nearest number to the right of the aforementioned empty cell. If the two said
+// numbers have the same sign, then the new number (distance) is given a positive
+// sign, otherwise a negative sign.
+// Regardless of whether the number was copied or an X_MARK was written, the
+// function then checks whether location j is occupied in the current world - if it is,
+// and its content is not the same as at location i, then we call this function
+// recursively to reproduce the number at location i into the
+// the location given by i offset by the content of location j.
+//
 void reproduceConditional(int i, int j, int level)
 {
     // first do a belt and braces check to guard against infinite recursion
@@ -567,23 +628,40 @@ void reproduceConditional(int i, int j, int level)
 
     if ((j >= 0) && (j < worldSize)) {
         if (nextWorld[j] == 0) {
-            // if no other orgs have reproduced into cell j yet, go ahead and reproduce cell i here
+            // the destination cell is blank, so go ahead
             nextWorld[j] = world[i];
         }
         else if (nextWorld[j] == world[i]) {
-            // do nothing
+            // the destination cell contains the same number that we want to move
+            // to it, so do nothing in this case (the current number remains)
         }
         else {
+            // the destination cell contains a number different to the one we
+            // are attempting to move into it - so potentially mark it with X_MARK
+            // or produce a mutation
+
             if (world[j] != 0 && world[j] != X_MARK) {
+                // the cell above our destination cell contains a number, so the
+                // place an X_MARK in the destination cell
                 nextWorld[j] = X_MARK;
             }
             else {
+                // the cell above our destination cell is either blank or
+                // contains an X_MARK, so consider placing a mutated number in
+                // the destination cell
                 auto [lpos, lnum] = findNearestNumber(j, -1);
                 auto [rpos, rnum] = findNearestNumber(j, 1);
                 if (lpos == X_MARK || rpos == X_MARK) {
+                    // no number found to the left and/or right of the empty cell,
+                    // so he destintaion cell gets an X_MARK
                     nextWorld[j] = X_MARK;
                 }
                 else {
+                    // we found the closest numbers to the left and right of the
+                    // empty cell, so the destination cell gets assigned a number
+                    // corresponding to the distance between these two found cells.
+                    // The sign of the assigned number is positive if the found numbers
+                    // are of equal sign, or negative otherwise
                     nextWorld[j] = (rpos-lpos) * ((lnum * rnum) > 0 ? 1 : -1);
                 }
             }
@@ -592,13 +670,25 @@ void reproduceConditional(int i, int j, int level)
             if (debug) {
                 std::cout << "recurse" << std::endl;
             }
+            // if the new contents of cell j comes below a different (non-zero) number,
+            // then reproduce it in cell (i + [contents of j]). The final condition
+            // in the line above (i+world[j] != j) ensures we don't waste our time trying to move
+            // into the same cell j as we have just handeled in the current call to this function.
             reproduceConditional(i, i+world[j], ++level);
         }
     }
 }
 
 
+// Helper function to find the position of the nearest cell to cell i that is
+// occupied by a number. The paramater delta specifies the direction of the
+// search (1=right, -1=left).
+// Returns a FindResults object containing the index and contents of the
+// found cell, or {X_MARK, X_MARK} is the edge of the world is reached without
+// finding an occupied cell.
 FindResult findNearestNumber(int i, int delta) {
+    assert(delta == 1 || delta == -1);
+
     int pos = i + delta;
     while ((pos >= 0) && (pos < worldSize)) {
         if ((world[pos] != 0) && (world[pos] != X_MARK)) {
