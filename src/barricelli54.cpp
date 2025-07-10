@@ -35,10 +35,14 @@
 //   > g++ -std=c++20 -o barricelli54 barricelli54.cpp
 //
 // Written by: Tim Taylor <https://www.tim-taylor.com>
-// First release: July 2025
-// Last update: July 2025
+// First release: 10 July 2025
+// Last update: 10 July 2025
 //
-// TODO state licence terms
+// GitHub repository: https://github.com/tim-taylor/barricelli54
+//
+// This program is distributed under the GNU GPLv3 license. For full
+// information, see the LICENSE file included in the base directory of
+// this distribution.
 
 
 #include <iostream>
