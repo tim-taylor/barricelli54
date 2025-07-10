@@ -43,7 +43,7 @@ def read_csv_to_array(file_path):
 def draw_bracket(ax, start, end, row_y, above=True, label=""):
     """Draw a simple horizontal bracket line with caps and a label above or below."""
     mid = (start + end) / 2
-    label_y = row_y + (-0.4 if above else 0.4)
+    label_y = row_y + (-0.45 if above else 0.45)
     cap_height = 0.15 if above else -0.15
 
     # Straight horizontal line
@@ -62,11 +62,13 @@ def draw_grid(data, output_path, draw_borders=False, labels=[]):
     fig_height = rows * 0.125 + (0.4 if len(labels) > 0 else 0.0)
     fig, ax = plt.subplots(figsize=(cols * 0.125, fig_height), dpi=300)
 
-    ax.set_xlim(0, cols)
+    # set margins around the fig (larger margins if there are labels to be displayed)
+    ax.set_xlim(-0.25, cols + 0.25)
     if len(labels) == 0:
-        ax.set_ylim(0, rows)
+        ax.set_ylim(-0.25, rows + 0.25)
     else:
-        ax.set_ylim(-1.1, rows + 1.1)
+        ax.set_ylim(-1.25, rows + 1.25)
+
     ax.axis('off')
     ax.invert_yaxis()
 
