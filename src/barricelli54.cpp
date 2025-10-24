@@ -685,7 +685,7 @@ void reproduceConditional(int i, int j, int level)
 
 
 // Helper function to find the position of the nearest cell to cell i that is
-// occupied by a number. The paramater delta specifies the direction of the
+// occupied by a number. The parameter delta specifies the direction of the
 // search (1=right, -1=left).
 // Returns a FindResults object containing the index and contents of the
 // found cell, or {X_MARK, X_MARK} is the edge of the world is reached without
