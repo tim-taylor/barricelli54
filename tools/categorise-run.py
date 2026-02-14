@@ -14,7 +14,9 @@ Output: X,N,C
   X = run number
   N = count of distinct values in the final line
   C = category (1-25 if the final line matches the line N rows
-      before it; 0 if no match found within 25 rows)"""
+      before it; 0 if no match found within 25 rows;
+      1 means the final line is identical to the previous line,
+      i.e. a static pattern)"""
 
 if len(sys.argv) != 2 or sys.argv[1] in ("-h", "--help"):
     print(HELP)

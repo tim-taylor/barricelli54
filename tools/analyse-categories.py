@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analyse run-categories.csv, summarising columns 2 (distinct count) and 3 (category)."""
+"""Analyse the output of run-categories.csv, summarising columns 2 (distinct count) and 3 (category)."""
 
 import csv
 from collections import defaultdict
