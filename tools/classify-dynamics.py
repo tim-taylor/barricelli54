@@ -8,10 +8,9 @@ Categories:
   GLIDER  - simple localised pattern gliding through a repeating background
   COMPLEX - anything else
 
-Usage: classify-dynamics.py [dir]
-  dir  directory containing fig15-random-init-*.csv files (default: ..)
+Usage: classify-dynamics.py file1.csv [file2.csv ...]
 
-Output: one line per run: run_number,category
+Output: one line per file: filename,category
 
 Detection method for GLIDER:
   Compare each line with the line D rows earlier (for D = 1, 2, 3).
@@ -26,7 +25,6 @@ Written by Claude Code and Tim Taylor, 13 Feb 2026
 
 import sys
 import os
-import glob
 from collections import Counter
 
 GLIDER_THRESHOLD = 15   # max differing cells (at best period) to count as GLIDER
@@ -75,25 +73,17 @@ def classify(filepath):
 
 
 def main():
-    csv_dir = sys.argv[1] if len(sys.argv) > 1 else ".."
-    pattern = os.path.join(csv_dir, "fig15-random-init-*.csv")
-    files = glob.glob(pattern)
-    if not files:
-        print(f"No files matching {pattern}", file=sys.stderr)
+    if len(sys.argv) < 2:
+        print("Usage: classify-dynamics.py file1.csv [file2.csv ...]", file=sys.stderr)
         sys.exit(1)
 
-    # Sort by run number
-    def run_number(path):
-        base = os.path.basename(path)
-        return int(base.replace("fig15-random-init-", "").replace(".csv", ""))
-
-    files.sort(key=run_number)
+    files = sys.argv[1:]
 
     counts = Counter()
     for f in files:
         cat = classify(f)
         counts[cat] += 1
-        print(f"{run_number(f)},{cat}")
+        print(f"{os.path.basename(f)},{cat}")
 
     # Print summary to stderr
     print(file=sys.stderr)
