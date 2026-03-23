@@ -14,7 +14,8 @@
 //
 // This translation is accompanied by a commentary on the paper:
 //
-//   Tim Taylor, Giulia Bianchi et al. "Lorem Ipsum",
+//   Tim Taylor, Giulia Bianchi et al. "A commentary on Nils Aall Barricelli’s
+//     groundbreaking Artificial Life paper 'Esempi Numerici di Processi di Evoluzione' (1954)",
 //     Artificial Life (x) xx-xx, 202x. DOI: xyz
 //
 // TODO fill in citation details in previous lines when known
@@ -25,18 +26,18 @@
 // Usage:
 //   > barricelli54 [-c] n
 // where:
-//   n  is a number between 1 and 22 to specify which figure from
+//   n  is a number between 1 and 25 to specify which figure from
 //      Barricelli's 1954 paper is to be reproduced
 //   -c Produce output in CSV format. If this flag is not specified, the
 //      output is space separated and padded so that columns line up
 //      vertically
 //
 // Example compilation command with the g++ compiler:
-//   > g++ -std=c++20 -o barricelli54 barricelli54.cpp
+//   > g++ -std=c++20 -o barricelli54 src/barricelli54.cpp
 //
 // Written by: Tim Taylor <https://www.tim-taylor.com>
 // First release: 10 July 2025
-// Last update: 10 July 2025
+// Last update: 23 March 2026
 //
 // GitHub repository: https://github.com/tim-taylor/barricelli54
 //
@@ -182,7 +183,6 @@ std::string getNormName()
             std::cerr << std::format("Error! Encountered unknown norm {}", (int)norm) << std::endl;
             exit(1);
         }
-
     }
 }
 
