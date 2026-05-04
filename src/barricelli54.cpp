@@ -20,14 +20,15 @@
 //
 // TODO fill in citation details in previous lines when known
 //
-// The program takes a number in the range 1-22 as a command line argument,
+// The program takes a number in the range 1-25 as a command line argument,
 // and reproduces the corresponding figure from Barricelli's 1954 paper.
 //
 // Usage:
 //   > barricelli54 [-c] n
 // where:
 //   n  is a number between 1 and 25 to specify which figure from
-//      Barricelli's 1954 paper is to be reproduced
+//      Barricelli's 1954 paper is to be reproduced (numbers above 22 are
+//      test cases)
 //   -c Produce output in CSV format. If this flag is not specified, the
 //      output is space separated and padded so that columns line up
 //      vertically
@@ -37,7 +38,7 @@
 //
 // Written by: Tim Taylor <https://www.tim-taylor.com>
 // First release: 10 July 2025
-// Last update: 23 March 2026
+// Last update: 4 May 2026
 //
 // GitHub repository: https://github.com/tim-taylor/barricelli54
 //
@@ -83,7 +84,7 @@ void printUsageAndExit(const std::string& progname, int rc);
 int  parseFigNumberOrExit(int argc, char** argv);
 std::string getNormName();
 void init(int fig);
-void initWorld(std::vector<int> initlist);
+void initWorld(const std::vector<int>& initlist);
 void printWorld();
 void updateWorld();
 void flipWorlds();
@@ -391,7 +392,7 @@ void init(int fig)
 }
 
 
-void initWorld(std::vector<int> initlist)
+void initWorld(const std::vector<int>& initlist)
 {
     if (initlist.size() > worldSize) {
         std::cerr << std::format("Error: Initializer list size ({}) is bigger than world size ({})!", initlist.size(), worldSize) << std::endl;
