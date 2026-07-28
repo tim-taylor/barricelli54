@@ -41,6 +41,35 @@ def read_csv_to_array(file_path):
             data.append(processed_row)
     return data
 
+def measure_digit_bottom_offset(fig, ax):
+    """Measures how far above the bottom boundary of a (unit-height) cell
+    the bottom of a rendered digit sits, using a representative digit.
+
+    get_window_extent() alone cannot be used for this: it pads a text's
+    bounding box with the font's generic descent region, which digits --
+    having no descenders -- never actually render into, so the resulting
+    offset would be much smaller than the digit's true visible extent.
+    Instead the digit is rendered and its actual ink pixels are inspected.
+    """
+    dummy = ax.text(0.5, 0.5, "0", ha='center', va='center', fontsize=6, fontweight='bold')
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    bbox = dummy.get_window_extent(renderer=renderer)
+
+    buf = np.asarray(fig.canvas.buffer_rgba())
+    fig_height_px = buf.shape[0]
+    row_top = max(int(fig_height_px - bbox.y1) - 3, 0)
+    row_bottom = int(fig_height_px - bbox.y0) + 3
+    col_left = max(int(bbox.x0) - 3, 0)
+    col_right = int(bbox.x1) + 3
+    region = buf[row_top:row_bottom, col_left:col_right, :3]
+    ink_rows = np.where((region.min(axis=2) < 128).any(axis=1))[0]
+    ink_bottom_row = ink_rows.max() + row_top
+
+    ink_bottom_data_y = ax.transData.inverted().transform((bbox.x0, fig_height_px - ink_bottom_row))[1]
+    dummy.remove()
+    return 1 - ink_bottom_data_y
+
 def draw_bracket(ax, start, end, row_y, above=True, label=""):
     """Draw a simple horizontal bracket line with caps and a label above or below."""
     mid = (start + end) / 2
@@ -73,6 +102,16 @@ def draw_grid(data, output_path, draw_borders=False, labels=[]):
     ax.axis('off')
     ax.invert_yaxis()
 
+    # fix the axes position now so that pixel<->data coordinate mapping used
+    # below for measuring the digit's extent matches what will end up in the
+    # saved image (subplots_adjust must not change after that measurement)
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    fig.canvas.draw()
+
+    # every negative number's bar is placed at the same fixed height above
+    # its own cell's bottom boundary, halfway to the bottom of the digit
+    bar_height_above_cell_bottom = measure_digit_bottom_offset(fig, ax) / 2
+
     for y in range(rows):
         for x in range(cols):
             value = data[y][x]
@@ -93,7 +132,8 @@ def draw_grid(data, output_path, draw_borders=False, labels=[]):
                 ax.text(x + 0.5, y + 0.5, num_str,
                         ha='center', va='center', fontsize=6, fontweight='bold', clip_on=True)
                 text_width = 0.4 * len(num_str)
-                ax.plot([x + 0.5 - text_width / 2, x + 0.5 + text_width / 2], [y + 0.9, y + 0.9],
+                bar_y = (y + 1) - bar_height_above_cell_bottom
+                ax.plot([x + 0.5 - text_width / 2, x + 0.5 + text_width / 2], [bar_y, bar_y],
                         linewidth=1, color='black')
             else:
                 display_text = str(int(value))
@@ -108,7 +148,6 @@ def draw_grid(data, output_path, draw_borders=False, labels=[]):
         elif position == 'below':
             draw_bracket(ax, start, end, rows + 0.35, above=False, label=text)
 
-    plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
     plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
     plt.close()
 
@@ -147,6 +186,10 @@ if __name__ == "__main__":
     input_csv = sys.argv[arg_index]
     arg_index += 1
     label_specs = sys.argv[arg_index:]
+
+    if not os.path.isfile(input_csv):
+        print(f"Error: input CSV file not found: {input_csv}")
+        sys.exit(1)
 
     labels = []
     for spec in label_specs:
